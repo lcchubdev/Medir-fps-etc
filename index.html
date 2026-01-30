@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor PRO Gamer</title>
+
+<style>
+body {
+    margin: 0;
+    background: #050505;
+    color: #00ff88;
+    font-family: monospace;
+}
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.75);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #00ff8840;
+    max-width: 340px;
+}
+.item {
+    margin-bottom: 6px;
+}
+span {
+    color: #fff;
+}
+.warning {
+    color: #ff4444;
+}
+.small {
+    font-size: 11px;
+    color: #aaa;
+}
+</style>
+</head>
+<body>
+
+<div id="hud">
+    <div class="item">📱 Dispositivo: <span id="device">Detectando...</span></div>
+
+    <div class="item">FPS (Navegador): <span id="fps">0</span></div>
+    <div class="item">Frame Time: <span id="frametime">0</span> ms</div>
+
+    <div class="item">CPU Cores: <span id="cpu">-</span></div>
+    <div class="item">RAM Total: <span id="ram">-</span> GB</div>
+    <div class="item">RAM em uso: <span id="ramUse">-</span> MB</div>
+
+    <div class="item">Bateria: <span id="battery">-</span></div>
+    <div class="item">Status: <span id="charging">-</span></div>
+
+    <div class="item">Conexão: <span id="net">-</span></div>
+    <div class="item">Ping: <span id="ping">-</span> ms</div>
+
+    <div class="item">Resolução: <span id="res">-</span></div>
+    <div class="item">Orientação: <span id="orientation">-</span></div>
+    <div class="item">Touch ativo: <span id="touch">Não</span></div>
+
+    <div class="item">Temperatura: <span class="warning">Indisponível</span></div>
+
+    <hr style="border:1px solid #00ff8820">
+
+    <div class="item">
+        🎮 FPS ESTIMADO (Jogos):
+        <br>Free Fire: <span id="ff">-</span>
+        <br>Roblox: <span id="rb">-</span>
+        <br>Minecraft: <span id="mc">-</span>
+        <div class="small">* estimativa baseada no aparelho</div>
+    </div>
+</div>
+
+<script>
+/* FPS e FrameTime */
+let last = performance.now();
+let frames = 0;
+
+function loop(now) {
+    frames++;
+    if (now - last >= 1000) {
+        document.getElementById("fps").textContent = frames;
+        document.getElementById("frametime").textContent =
+            (1000 / frames).toFixed(2);
+        frames = 0;
+        last = now;
+    }
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* CPU e RAM */
+const cores = navigator.hardwareConcurrency || 4;
+const ram = navigator.deviceMemory || 2;
+
+document.getElementById("cpu").textContent = cores;
+document.getElementById("ram").textContent = ram;
+
+/* RAM usada pelo navegador */
+if (performance.memory) {
+    setInterval(() => {
+        document.getElementById("ramUse").textContent =
+            Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+    }, 1000);
+} else {
+    document.getElementById("ramUse").textContent = "Bloqueado";
+}
+
+/* Bateria */
+if (navigator.getBattery) {
+    navigator.getBattery().then(b => {
+        function update() {
+            document.getElementById("battery").textContent =
+                Math.round(b.level * 100) + "%";
+            document.getElementById("charging").textContent =
+                b.charging ? "Carregando 🔌" : "Descarregando 🔋";
+        }
+        update();
+        b.addEventListener("levelchange", update);
+        b.addEventListener("chargingchange", update);
+    });
+}
+
+/* Conexão */
+if (navigator.connection) {
+    document.getElementById("net").textContent =
+        navigator.connection.effectiveType.toUpperCase();
+}
+
+/* Ping fake */
+setInterval(() => {
+    document.getElementById("ping").textContent =
+        Math.floor(Math.random() * 40) + 20;
+}, 1500);
+
+/* Resolução e orientação */
+function updateScreen() {
+    document.getElementById("res").textContent =
+        screen.width + "x" + screen.height;
+    document.getElementById("orientation").textContent =
+        screen.orientation.type;
+}
+updateScreen();
+screen.orientation.addEventListener("change", updateScreen);
+
+/* Touch */
+window.addEventListener("touchstart", () => {
+    document.getElementById("touch").textContent = "Sim";
+    setTimeout(() => {
+        document.getElementById("touch").textContent = "Não";
+    }, 500);
+});
+
+/* Nome do dispositivo (estimado) */
+const ua = navigator.userAgent;
+let device = "Android desconhecido";
+
+if (ua.includes("SM-")) device = "Samsung " + ua.match(/SM-\w+/)[0];
+else if (ua.includes("Redmi")) device = "Xiaomi Redmi";
+else if (ua.includes("Moto")) device = "Motorola";
+else if (ua.includes("Infinix")) device = "Infinix";
+else if (ua.includes("Tecno")) device = "Tecno";
+else if (ua.includes("Pixel")) device = "Google Pixel";
+
+document.getElementById("device").textContent = device;
+
+/* FPS estimado dos jogos */
+let ff, rb, mc;
+
+if (ram <= 2 || cores <= 4) {
+    ff = "30–45 FPS";
+    rb = "20–35 FPS";
+    mc = "15–30 FPS";
+} else if (ram <= 4) {
+    ff = "50–60 FPS";
+    rb = "40–60 FPS";
+    mc = "30–45 FPS";
+} else {
+    ff = "60+ FPS";
+    rb = "60+ FPS";
+    mc = "50–60 FPS";
+}
+
+document.getElementById("ff").textContent = ff;
+document.getElementById("rb").textContent = rb;
+document.getElementById("mc").textContent = mc;
+</script>
+
+</body>
+  </html>
